@@ -121,7 +121,7 @@
       try {
         const messageHash = await nobleSecp256k1.utils.sha256(new TextEncoder().encode(currentChallenge));
 
-        // FIXED: Convert base64 signature to Uint8Array (this was the bug)
+        // FIXED: Correct base64 → Uint8Array conversion
         const signatureBytes = Uint8Array.from(atob(signatureBase64), c => c.charCodeAt(0));
 
         const isValid = await nobleSecp256k1.verify(signatureBytes, messageHash, savedPublicKey);
