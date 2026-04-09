@@ -1,11 +1,131 @@
-    <div id="successScreen" style="display:none;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hash Pass Demo</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@noble/secp256k1@1.7.1/dist/index.min.js"></script>
+  <style>
+    body { 
+      margin:0; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background:#0a0a0a; 
+      color:#fff; 
+      min-height:100vh; 
+    }
+    .container { 
+      max-width:420px; 
+      margin:0 auto; 
+      padding:40px 20px; 
+      text-align:center; 
+    }
+    .logo { 
+      width:80px; 
+      height:80px; 
+      background:#fff; 
+      border-radius:20px; 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+      margin:0 auto 20px; 
+      font-size:42px; 
+      box-shadow:0 10px 30px rgba(0,0,0,0.4); 
+    }
+    h1 { font-size:28px; margin-bottom:8px; }
+    .subtitle { color:#aaaaaa; margin-bottom:40px; }
+    .btn { 
+      display:block; 
+      width:100%; 
+      padding:18px; 
+      margin:12px 0; 
+      border:none; 
+      border-radius:16px; 
+      font-size:17px; 
+      font-weight:600; 
+      cursor:pointer; 
+    }
+    .btn-primary { background:#f59e0b; color:#000; }
+    .btn-secondary { background:#1f1f1f; color:#fff; }
+    .section { 
+      background:#1a1a1a; 
+      padding:25px; 
+      border-radius:20px; 
+      margin:30px 0; 
+      text-align:left; 
+    }
+    textarea {
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 12px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 15px;
+      min-height: 110px;
+    }
+    .status { margin-top:15px; font-size:15px; }
+    .success { color:#22c55e; font-weight:600; }
+    .error { color:#ef4444; }
+    .qr-container { 
+      background:#1a1a1a; 
+      padding:30px; 
+      border-radius:20px; 
+      margin:30px auto; 
+      display:none; 
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🔑</div>
+    <h1>Hash Pass Demo</h1>
+    <p class="subtitle">Real Bitcoin cryptography authentication</p>
+
+    <button class="btn btn-primary" onclick="register()">Register New Account</button>
+    <button class="btn btn-secondary" onclick="startLogin()">Login with Hash Pass</button>
+    <button class="btn btn-secondary" onclick="clearRegisteredKey()" 
+            style="background:#333; margin-top:20px; font-size:15px;">
+      Clear Registered Key
+    </button>
+
+    <!-- QR Code -->
+    <div id="qrContainer" class="qr-container">
+      <div id="qrcode"></div>
+      <p class="status" id="qrStatus">Scan with Hash Pass app</p>
+    </div>
+
+    <!-- Register Section -->
+    <div id="registerSection" class="section hidden">
+      <h2 style="margin-top:0;">Register Public Key</h2>
+      <p>Paste the <strong>Public Key</strong> copied from the app:</p>
+      <textarea id="publicKeyInput" placeholder="Paste public key here..."></textarea>
+      <button class="btn btn-primary" onclick="submitPublicKey()">Register Public Key</button>
+      <p class="status" id="registerStatus"></p>
+    </div>
+
+    <!-- Login Section -->
+    <div id="loginSection" class="section hidden">
+      <h2 style="margin-top:0;">Verify Signature</h2>
+      <p>Paste the <strong>Signature</strong> copied from the app:</p>
+      <textarea id="signatureInput" placeholder="Paste signature here..."></textarea>
+      <button class="btn btn-primary" onclick="submitSignature()">Verify Signature</button>
+      <p class="status" id="loginStatus"></p>
+    </div>
+
+    <!-- Success Screen -->
+    <div id="successScreen" class="hidden">
       <div style="font-size:70px; margin:40px 0;">🎉</div>
-      <h2 clas="success">Success!</h2>
+      <h2 class="success">Success!</h2>
       <p id="successText">Authentication completed with Bitcoin cryptography.</p>
       <button class="btn btn-primary" onclick="resetDemo()">Try Again</button>
     </div>
 
-    <div id="errorScreen" style="display:none;">
+    <!-- Error Screen -->
+    <div id="errorScreen" class="hidden">
       <div style="font-size:70px; margin:40px 0;">❌</div>
       <h2 class="error">Access Denied</h2>
       <p id="errorText"></p>
@@ -21,16 +141,14 @@
       currentChallenge = "register-" + Date.now();
       const payload = { site: "demo.hashpass.app", challenge: currentChallenge, register: true };
       showQR(payload);
-      hideAllSections();
-      document.getElementById('registerSection').style.display = 'block';
+      showSection('registerSection');
     }
 
     function startLogin() {
       currentChallenge = "challenge-" + Date.now();
       const payload = { site: "demo.hashpass.app", challenge: currentChallenge, register: false };
       showQR(payload);
-      hideAllSections();
-      document.getElementById('loginSection').style.display = 'block';
+      showSection('loginSection');
     }
 
     function showQR(payload) {
@@ -47,11 +165,12 @@
       });
     }
 
-    function hideAllSections() {
-      document.getElementById('registerSection').style.display = 'none';
-      document.getElementById('loginSection').style.display = 'none';
-      document.getElementById('successScreen').style.display = 'none';
-      document.getElementById('errorScreen').style.display = 'none';
+    function showSection(sectionId) {
+      document.getElementById('registerSection').classList.add('hidden');
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('successScreen').classList.add('hidden');
+      document.getElementById('errorScreen').classList.add('hidden');
+      document.getElementById(sectionId).classList.remove('hidden');
     }
 
     async function submitPublicKey() {
@@ -59,7 +178,7 @@
       const statusEl = document.getElementById('registerStatus');
 
       if (!pubKey) {
-        statusEl.textContent = "Please paste a public key";
+        statusEl.textContent = "Please paste the public key from the app";
         statusEl.className = "status error";
         return;
       }
@@ -67,8 +186,77 @@
       localStorage.setItem('hashpass_publicKey', pubKey);
       savedPublicKey = pubKey;
 
-      statusEl.textContent = "✅ Public key registered successfully!";
+      statusEl.innerHTML = "✅ Public key registered successfully!";
       statusEl.className = "status success";
 
       setTimeout(() => {
-        document.getElementById('successScreen').style.display = 'block';
+        document.getElementById('successScreen').classList.remove('hidden');
+        document.getElementById('successText').textContent = 'Public key has been registered!';
+        document.getElementById('registerSection').classList.add('hidden');
+      }, 1200);
+    }
+
+    async function submitSignature() {
+      const signature = document.getElementById('signatureInput').value.trim();
+      const statusEl = document.getElementById('loginStatus');
+
+      if (!signature) {
+        statusEl.textContent = "Please paste the signature from the app";
+        statusEl.className = "status error";
+        return;
+      }
+
+      if (!savedPublicKey) {
+        statusEl.textContent = "No public key registered. Please register first.";
+        statusEl.className = "status error";
+        return;
+      }
+
+      try {
+        const messageHash = await nobleSecp256k1.utils.sha256(new TextEncoder().encode(currentChallenge));
+        const isValid = await nobleSecp256k1.verify(signature, messageHash, savedPublicKey);
+
+        if (isValid) {
+          statusEl.innerHTML = "✅ Signature verified successfully!";
+          statusEl.className = "status success";
+
+          setTimeout(() => {
+            document.getElementById('successScreen').classList.remove('hidden');
+            document.getElementById('successText').textContent = 'Login verified with real Bitcoin cryptography!';
+            document.getElementById('loginSection').classList.add('hidden');
+          }, 1200);
+        } else {
+          statusEl.textContent = "❌ Invalid signature";
+          statusEl.className = "status error";
+        }
+      } catch (e) {
+        statusEl.textContent = "Verification error. Make sure the signature is correct.";
+        statusEl.className = "status error";
+      }
+    }
+
+    function clearRegisteredKey() {
+      if (confirm("Clear registered public key?")) {
+        localStorage.removeItem('hashpass_publicKey');
+        savedPublicKey = null;
+        alert("Key cleared. Register again with a new seed if needed.");
+        resetDemo();
+      }
+    }
+
+    function resetDemo() {
+      document.getElementById('qrContainer').style.display = 'none';
+      document.getElementById('publicKeyInput').value = '';
+      document.getElementById('signatureInput').value = '';
+      document.getElementById('registerStatus').textContent = '';
+      document.getElementById('loginStatus').textContent = '';
+      showSection(''); // hide all sections
+    }
+
+    // Initialize - make sure nothing is shown by default
+    window.onload = () => {
+      resetDemo();
+    };
+  </script>
+</body>
+</html>
