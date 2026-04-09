@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hash Pass Demo</title>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@noble/secp256k1@1.7.1/dist/index.min.js"></script>
+  <!-- Fixed library load -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/noble-secp256k1/1.7.1/index.min.js"></script>
   <style>
     body { margin:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#0a0a0a; color:#fff; min-height:100vh; }
     .container { max-width:420px; margin:0 auto; padding:40px 20px; text-align:center; }
@@ -94,7 +95,6 @@
       new QRCode(document.getElementById('qrcode'), { text: qrData, width: 260, height: 260, colorDark: "#ffffff", colorLight: "#1a1a1a" });
     }
 
-    // Reliable base64 to Uint8Array
     function base64ToUint8Array(base64) {
       const binaryString = atob(base64);
       const bytes = new Uint8Array(binaryString.length);
@@ -131,8 +131,6 @@
       try {
         const messageHash = await nobleSecp256k1.utils.sha256(new TextEncoder().encode(currentChallenge));
         const signatureBytes = base64ToUint8Array(signatureBase64);
-
-        console.log("Signature length:", signatureBytes.length); // debug
 
         const isValid = await nobleSecp256k1.verify(signatureBytes, messageHash, savedPublicKey);
 
