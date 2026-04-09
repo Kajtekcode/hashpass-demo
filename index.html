@@ -94,6 +94,16 @@
       new QRCode(document.getElementById('qrcode'), { text: qrData, width: 260, height: 260, colorDark: "#ffffff", colorLight: "#1a1a1a" });
     }
 
+    // Reliable base64 to Uint8Array
+    function base64ToUint8Array(base64) {
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return bytes;
+    }
+
     async function submitPublicKey() {
       const pubKey = document.getElementById('publicKeyInput').value.trim();
       const statusEl = document.getElementById('registerStatus');
@@ -120,9 +130,9 @@
 
       try {
         const messageHash = await nobleSecp256k1.utils.sha256(new TextEncoder().encode(currentChallenge));
+        const signatureBytes = base64ToUint8Array(signatureBase64);
 
-        // FIXED: Correct base64 → Uint8Array conversion
-        const signatureBytes = Uint8Array.from(atob(signatureBase64), c => c.charCodeAt(0));
+        console.log("Signature length:", signatureBytes.length); // debug
 
         const isValid = await nobleSecp256k1.verify(signatureBytes, messageHash, savedPublicKey);
 
